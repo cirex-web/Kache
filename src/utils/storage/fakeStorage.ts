@@ -478,7 +478,7 @@ export const fakeData: IStorage = {
             "id": "1352389",
         },
     ],
-    introPopupOpen: true,
+    currentlyActiveFolder: null,
     userId: "AAAAA",
     debug: false
 }

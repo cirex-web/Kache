@@ -15,10 +15,9 @@ const firebaseConfig = {
 };
 // Initialize Firebase
 const db = getFirestore(initializeApp(firebaseConfig));
-export const addData = async (id: string, content: any) => {
-    logger.debug(id, content);
+export const addData = async (path: string, id: string, content: any) => {
     try {
-        await setDoc(doc(db, "users", id), { ...content, lastUpdated: +new Date() });
+        await setDoc(doc(db, path, id), content);
     } catch (e) {
         logger.warn(e);
     }

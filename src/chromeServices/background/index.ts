@@ -7,7 +7,7 @@ import { similar } from "../../utils/strings";
 import { nanoid } from "nanoid";
 import ISO6391 from 'iso-639-1';
 import { getDestinationFolders } from "./filter";
-import { addAlarm, preloadHTML, uploadStorage } from "./alarms";
+import { addAlarm, makeHiddenCardFolder, preloadHTML, uploadStorage } from "./alarms";
 
 
 logger.info("WordKache background script init!")
@@ -74,7 +74,7 @@ const addFlashcard = async (snapshot: ITranslationSnapshot) => {
             timeCreated: snapshot.inputTime,
             source: snapshot.source,
         });
-    })
+    });
 
     logger.info("Adding snapshot", snapshot);
 
@@ -164,26 +164,34 @@ async function updateStorageVersion() {
         /*@ts-ignore*/
         // eslint-disable-next-line no-fallthrough
         case 4:
-            logger.info("Updated to storage version 4");
-            await ChromeStorage.setPair("storageVersion", 4);
+
+            logger.info("Updated to storage version 5");
+            await ChromeStorage.setPair("storageVersion", 5);
+            break;
+        case 5:
+            logger.info("Already on latest version!");
             break;
         default:
-            throw new Error(`Invalid storage version ${currentVersion}`);
+            logger.warn("Invalid storage version", currentVersion);
+            await ChromeStorage.remove("storageVersion");
+            await updateStorageVersion(); //Just reset everything honestly
+            return;
     }
     await cleanDatabase();
 
 };
 
-updateStorageVersion();
-
 
 chrome.runtime.onInstalled.addListener(async () => {
+    await updateStorageVersion();
     await addAlarm("firebaseUpload", {
         periodInMinutes: 60,
         delayInMinutes: 0,
     });
     await addAlarm("preloadHTML", { periodInMinutes: 1, delayInMinutes: 0 });
-}); //run this only on first load 
+    await addAlarm("checkHiddenCards", { periodInMinutes: 10, delayInMinutes: 0 });
+}); //run this only on first load/update
 
 chrome.alarms.onAlarm.addListener(uploadStorage);
 chrome.alarms.onAlarm.addListener(preloadHTML);
+chrome.alarms.onAlarm.addListener(makeHiddenCardFolder); //periodically checks for firebase updates

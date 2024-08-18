@@ -109,5 +109,6 @@ export const ChromeStorage = {
     "set": (items: {
         [key: string]: any;
     }) => chrome.storage.local.set(items),
-    "setPair": (key: string, value: any) => ChromeStorage.set({ [key]: value })
+    "setPair": (key: string, value: any) => ChromeStorage.set({ [key]: value }),
+    "remove": (key: string) => chrome.storage.local.remove(key)
 };
